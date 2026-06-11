@@ -1,0 +1,101 @@
+# deploy-agent.yml
+# ─────────────────────────────────────────────────────────────────────────────
+# Pushes the Synthie Foundry Agent to Azure AI Foundry whenever
+# instructions.md, a persona file, or create_agent.py changes on main.
+#
+# Authentication: Azure OIDC (Workload Identity Federation) — no stored secrets.
+#
+# One-time setup (run locally after creating the GitHub repo):
+# ─────────────────────────────────────────────────────────────────────────────
+#   GITHUB_ORG=<your-gh-username-or-org>
+#   GITHUB_REPO=synthie
+#   SP_NAME=synthie-gh-actions
+#
+#   # 1. Create service principal
+#   SP_JSON=$(az ad sp create-for-rbac --name $SP_NAME --output json)
+#   CLIENT_ID=$(echo $SP_JSON | python -c "import sys,json; print(json.load(sys.stdin)['appId'])")
+#   TENANT_ID=$(az account show --query tenantId -o tsv)
+#   SUB_ID=$(az account show --query id -o tsv)
+#
+#   # 2. Add federated credential for GitHub Actions
+#   az ad app federated-credential create \
+#     --id $CLIENT_ID \
+#     --parameters "{
+#       \"name\": \"synthie-main\",
+#       \"issuer\": \"https://token.actions.githubusercontent.com\",
+#       \"subject\": \"repo:$GITHUB_ORG/$GITHUB_REPO:ref:refs/heads/main\",
+#       \"audiences\": [\"api://AzureADTokenExchange\"]
+#     }"
+#
+#   # 3. Assign Foundry User + Cognitive Services User roles on the AI resource
+#   RESOURCE_ID=$(az cognitiveservices account show \
+#     -n <your-account-name> -g <your-rg> --query id -o tsv)
+#   az role assignment create --assignee $CLIENT_ID \
+#     --role "Azure AI Foundry User" --scope $RESOURCE_ID
+#   az role assignment create --assignee $CLIENT_ID \
+#     --role "Cognitive Services User" --scope $RESOURCE_ID
+#
+#   # 4. Store these three values as GitHub Actions secrets:
+#   #    AZURE_CLIENT_ID       = $CLIENT_ID
+#   #    AZURE_TENANT_ID       = $TENANT_ID
+#   #    AZURE_SUBSCRIPTION_ID = $SUB_ID
+#
+#   # 5. Store these as GitHub Actions variables (non-secret):
+#   #    PROJECT_ENDPOINT      = https://<resource>.services.ai.azure.com/api/projects/<project>
+#   #    MODEL_DEPLOYMENT_NAME = gpt-4-1
+#   #    AGENT_NAME            = synthie
+#   #    PERSONA_FILE          = personas/default.md   (or leave blank)
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Deploy Synthie Agent
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "instructions.md"
+      - "personas/**"
+      - "create_agent.py"
+
+  # Allow manual trigger from the Actions tab
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # required for OIDC token exchange
+  contents: read
+
+jobs:
+  deploy-agent:
+    name: Push agent to Azure AI Foundry
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy Synthie agent
+        env:
+          PROJECT_ENDPOINT:      ${{ vars.PROJECT_ENDPOINT }}
+          MODEL_DEPLOYMENT_NAME: ${{ vars.MODEL_DEPLOYMENT_NAME }}
+          AGENT_NAME:            ${{ vars.AGENT_NAME }}
+          PERSONA_FILE:          ${{ vars.PERSONA_FILE }}
+          # WorkloadIdentityCredential picks these up automatically after azure/login
+          AZURE_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
+        run: python create_agent.py
