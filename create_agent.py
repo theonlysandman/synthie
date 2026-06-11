@@ -28,7 +28,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from azure.ai.projects import AIProjectClient
 from azure.ai.projects.models import PromptAgentDefinition
-from azure.identity import AzureCliCredential, WorkloadIdentityCredential, ChainedTokenCredential
+from azure.identity import AzureCliCredential, WorkloadIdentityCredential
 from azure.core.exceptions import HttpResponseError
 
 # ---------------------------------------------------------------------------
@@ -78,12 +78,14 @@ if PERSONA_FILE:
 # ---------------------------------------------------------------------------
 _client_id = os.environ.get("AZURE_CLIENT_ID", "")
 _tenant_id = os.environ.get("AZURE_TENANT_ID", "")
+_token_file = os.environ.get("AZURE_FEDERATED_TOKEN_FILE", "")
 
-if _client_id and _tenant_id:
-    # GitHub Actions OIDC path
+if _client_id and _tenant_id and _token_file:
+    # GitHub Actions OIDC path — azure/login@v2 sets AZURE_FEDERATED_TOKEN_FILE
     credential = WorkloadIdentityCredential(
         client_id=_client_id,
         tenant_id=_tenant_id,
+        token_file_path=_token_file,
     )
     print("Using WorkloadIdentityCredential (GitHub Actions OIDC)")
 else:
