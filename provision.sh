@@ -72,9 +72,16 @@ az cognitiveservices account create \
     --kind "AIServices" \
     --sku "S0" \
     --location "$REGION" \
+    --custom-domain "$ACCOUNT_NAME" \
     --allow-project-management true \
     --yes \
-    --output none
+    --output none 2>/dev/null || true
+# Add custom domain to existing account if not set (idempotent)
+az cognitiveservices account update \
+    --name "$ACCOUNT_NAME" \
+    --resource-group "$RESOURCE_GROUP" \
+    --custom-domain "$ACCOUNT_NAME" \
+    --output none 2>/dev/null || true
 echo "    ✓ AIServices account ready."
 echo ""
 
@@ -83,9 +90,10 @@ echo ""
 # ---------------------------------------------------------------------------
 echo ">>> Creating project '$PROJECT_NAME'..."
 az cognitiveservices account project create \
-    --account-name "$ACCOUNT_NAME" \
+    --name "$ACCOUNT_NAME" \
     --resource-group "$RESOURCE_GROUP" \
     --project-name "$PROJECT_NAME" \
+    --location "$REGION" \
     --output none 2>/dev/null || echo "    (Project already exists — skipping.)"
 echo "    ✓ Project ready."
 echo ""
@@ -95,20 +103,18 @@ echo ""
 # ---------------------------------------------------------------------------
 echo ">>> Creating model deployment '$MODEL_DEPLOYMENT_NAME'..."
 
-_model_version_flag=""
-if [[ -n "$MODEL_VERSION" ]]; then
-    _model_version_flag="--model-version $MODEL_VERSION"
-fi
+# model-version is required by the CLI; default to latest known if not set
+_model_version="${MODEL_VERSION:-2025-04-14}"
 
 az cognitiveservices account deployment create \
     --name "$ACCOUNT_NAME" \
     --resource-group "$RESOURCE_GROUP" \
     --deployment-name "$MODEL_DEPLOYMENT_NAME" \
     --model-name "$MODEL_NAME" \
+    --model-version "$_model_version" \
     --model-format "OpenAI" \
     --sku-name "GlobalStandard" \
     --sku-capacity "$MODEL_CAPACITY" \
-    ${_model_version_flag} \
     --output none 2>/dev/null || echo "    (Deployment already exists — skipping.)"
 echo "    ✓ Model deployment ready."
 echo ""
@@ -124,12 +130,16 @@ RESOURCE_ID=$(az cognitiveservices account show \
     --resource-group "$RESOURCE_GROUP" \
     --query id -o tsv)
 
-for ROLE in "Azure AI Foundry User" "Cognitive Services User"; do
-    az role assignment create \
-        --assignee "$CURRENT_UPN" \
-        --role "$ROLE" \
-        --scope "$RESOURCE_ID" \
-        --output none 2>/dev/null || echo "    ($ROLE already assigned — skipping.)"
+CURRENT_OID=$(az ad signed-in-user show --query id -o tsv 2>/dev/null || true)
+for ROLE in "Azure AI Developer" "Cognitive Services User"; do
+    if [[ -n "$CURRENT_OID" ]]; then
+        az role assignment create \
+            --assignee-object-id "$CURRENT_OID" \
+            --assignee-principal-type User \
+            --role "$ROLE" \
+            --scope "$RESOURCE_ID" \
+            --output none 2>/dev/null || echo "    ($ROLE already assigned — skipping.)"
+    fi
 done
 echo "    ✓ RBAC roles ready."
 echo ""
@@ -137,8 +147,8 @@ echo ""
 # ---------------------------------------------------------------------------
 # 8.  PRINT .env VALUES
 # ---------------------------------------------------------------------------
-VOICELIVE_ENDPOINT="https://${ACCOUNT_NAME}.services.ai.azure.com/"
-PROJECT_ENDPOINT="https://${ACCOUNT_NAME}.services.ai.azure.com/api/projects/${PROJECT_NAME}"
+VOICELIVE_ENDPOINT="https://${ACCOUNT_NAME}.cognitiveservices.azure.com/"
+PROJECT_ENDPOINT="https://${ACCOUNT_NAME}.cognitiveservices.azure.com/api/projects/${PROJECT_NAME}"
 
 echo "======================================================="
 echo "  Provisioning complete! Copy these values to .env:"
