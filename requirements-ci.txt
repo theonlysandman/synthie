@@ -1,0 +1,7 @@
+# requirements-ci.txt — dependencies for CI/CD (no audio hardware needed)
+# pyaudio is excluded because GitHub Actions runners don't have PortAudio.
+# create_agent.py does not use audio; main.py (which does) is only run locally.
+azure-ai-projects>=2.2.0
+azure-ai-voicelive[aiohttp]>=1.2.0
+azure-identity>=1.19.0
+python-dotenv>=1.0.0
