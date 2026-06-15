@@ -26,6 +26,7 @@ Controls:
 """
 
 import asyncio
+import base64
 import os
 import sys
 from typing import Optional
@@ -37,11 +38,7 @@ from azure.identity import AzureCliCredential
 # Voice Live SDK — async-only since azure-ai-voicelive 1.0.0b5
 from azure.ai.voicelive.aio import connect
 from azure.ai.voicelive.models import (
-    AudioInputTranscriptionOptions,
-    AzureSemanticVadMultilingual,
-    AzureStandardVoice,
     InputAudioFormat,
-    Modality,
     OutputAudioFormat,
     RequestSession,
     ServerEventType,
@@ -65,6 +62,7 @@ VOICELIVE_ENDPOINT: str = os.environ["VOICELIVE_ENDPOINT"].rstrip("/") + "/"
 PROJECT_NAME: str = os.environ["PROJECT_NAME"]
 AGENT_NAME: str = os.environ["AGENT_NAME"]
 AGENT_VERSION: Optional[str] = os.environ.get("AGENT_VERSION") or None
+MODEL_DEPLOYMENT_NAME: str = os.environ.get("MODEL_DEPLOYMENT_NAME", "gpt-realtime-2")
 VOICELIVE_API_VERSION: str = os.environ.get("VOICELIVE_API_VERSION", "2026-04-10")
 AZURE_VOICE: str = os.environ.get("AZURE_VOICE", "en-US-AvaNeural")
 
@@ -90,7 +88,21 @@ async def _mic_task(
     pa = pyaudio.PyAudio()
 
     def _callback(in_data, frame_count, time_info, status_flags):  # noqa: ARG001
-        loop.call_soon_threadsafe(mic_queue.put_nowait, in_data)
+        def _enqueue() -> None:
+            try:
+                mic_queue.put_nowait(in_data)
+            except asyncio.QueueFull:
+                # Consumer fell behind — drop the oldest frame and keep latest.
+                try:
+                    mic_queue.get_nowait()
+                except asyncio.QueueEmpty:
+                    pass
+                try:
+                    mic_queue.put_nowait(in_data)
+                except asyncio.QueueFull:
+                    pass
+
+        loop.call_soon_threadsafe(_enqueue)
         return (None, pyaudio.paContinue)
 
     stream = pa.open(
@@ -110,7 +122,7 @@ async def _mic_task(
             except asyncio.TimeoutError:
                 continue
             try:
-                await conn.input_audio_buffer.append(audio=chunk)
+                await conn.input_audio_buffer.append(audio=base64.b64encode(chunk).decode("ascii"))
             except Exception:  # noqa: BLE001
                 break
     finally:
@@ -169,15 +181,6 @@ async def _voice_loop() -> None:
     stop_event = asyncio.Event()
     audio_queue: asyncio.Queue = asyncio.Queue(maxsize=100)
 
-    agent_config = {
-        "agent_name": AGENT_NAME,
-        "project_name": PROJECT_NAME,
-        "agent_version": AGENT_VERSION,
-        "conversation_id": None,
-        "foundry_resource_override": None,
-        "authentication_identity_client_id": None,
-    }
-
     credential = AzureCliCredential()
 
     print(f"\nConnecting Synthie to Voice Live…")
@@ -185,26 +188,36 @@ async def _voice_loop() -> None:
     print(f"  Agent      : {AGENT_NAME}" + (f" v{AGENT_VERSION}" if AGENT_VERSION else " (latest)"))
     print(f"  Project    : {PROJECT_NAME}")
     print(f"  Voice      : {AZURE_VOICE}")
-    print(f"\nSynthie is ready. Speak to begin the simulation. Press Ctrl+C to exit.\n")
+    print(f"\nSynthie is ready. She'll open with Q1 — just answer out loud. Press Ctrl+C to exit.\n")
 
     async with connect(
         endpoint=VOICELIVE_ENDPOINT,
         credential=credential,
         api_version=VOICELIVE_API_VERSION,
-        agent_config=agent_config,
+        model=MODEL_DEPLOYMENT_NAME,
+        agent_name=AGENT_NAME,
+        project_name=PROJECT_NAME,
+        agent_version=AGENT_VERSION,
     ) as conn:
 
-        session_config = RequestSession(
-            modalities=[Modality.TEXT, Modality.AUDIO],
+        await conn.session.update(session=RequestSession(
             input_audio_format=InputAudioFormat.PCM16,
             output_audio_format=OutputAudioFormat.PCM16,
-            voice=AzureStandardVoice(name=AZURE_VOICE),
-            turn_detection=AzureSemanticVadMultilingual(),
-            input_audio_transcription=AudioInputTranscriptionOptions(
-                model="mai-transcribe-1",
-            ),
-        )
-        await conn.session.update(session=session_config)
+        ))
+
+        # Synthie speaks first: seed a hidden kickoff user turn, then request a
+        # response so the agent delivers its fixed Stage 1 opener (Q1 — what
+        # industry are you selling into?) before the user says anything. Mirrors
+        # the web relay in server.py. The agent's system prompt owns the wording.
+        await conn.send({
+            "type": "conversation.item.create",
+            "item": {
+                "type": "message",
+                "role": "user",
+                "content": [{"type": "input_text", "text": "Start the session with your opener and Q1."}],
+            },
+        })
+        await conn.send({"type": "response.create"})
 
         mic = asyncio.create_task(_mic_task(conn, stop_event, loop), name="mic-capture")
         spk = asyncio.create_task(_speaker_task(audio_queue, stop_event, loop), name="speaker-play")
