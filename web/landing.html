@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Synthie — Start</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+    .card {
+      width: min(560px, 94vw);
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 14px;
+      padding: 2rem 2rem 1.6rem;
+    }
+    h1 { margin: 0 0 0.25rem; font-size: 1.7rem; }
+    .sub { color: #8b949e; font-size: 0.95rem; margin: 0 0 1.5rem; }
+    label { display: block; font-size: 0.85rem; color: #8b949e; margin-bottom: 0.4rem; }
+    .field { display: flex; gap: 0.5rem; }
+    input[type="text"] {
+      flex: 1;
+      font-size: 1rem;
+      padding: 0.7rem 0.9rem;
+      border-radius: 10px;
+      border: 1px solid #30363d;
+      background: #0d1117;
+      color: #e6edf3;
+      outline: none;
+    }
+    input[type="text"]:focus { border-color: #1f6feb; }
+    button {
+      font-size: 1rem;
+      padding: 0.7rem 1.4rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      background: #2ea043;
+      color: white;
+      white-space: nowrap;
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .hint { font-size: 0.8rem; color: #6e7681; margin-top: 0.7rem; }
+    #progress {
+      margin-top: 1.4rem;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      display: none;
+    }
+    #progress.show { display: block; }
+    .step { color: #8b949e; }
+    .step.done { color: #3fb950; }
+    .step.active { color: #58a6ff; }
+    .step.err { color: #ff7b72; }
+    .spin {
+      display: inline-block; width: 0.85em; height: 0.85em;
+      border: 2px solid #30363d; border-top-color: #58a6ff;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+      vertical-align: -0.1em; margin-right: 0.4em;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .skip { margin-top: 1rem; font-size: 0.8rem; }
+    .skip a { color: #6e7681; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🎙️ Synthie</h1>
+    <p class="sub">Find the first digital decision worth selling into a customer. Start with their website — Synthie researches the business while you get ready to talk.</p>
+
+    <form id="form">
+      <label for="url">Customer website</label>
+      <div class="field">
+        <input id="url" type="text" placeholder="example.com" autocomplete="off" autofocus />
+        <button id="go" type="submit">Research &amp; start</button>
+      </div>
+      <div class="hint">We pull public pages (about, products, industry) to pre-load context. Cached after the first time.</div>
+    </form>
+
+    <div id="progress">
+      <div class="step" id="s1">Fetching the website…</div>
+      <div class="step" id="s2">Analyzing the business…</div>
+      <div class="step" id="s3">Preparing your session…</div>
+    </div>
+
+    <div class="skip"><a href="#" id="skip">Skip — just start talking</a></div>
+  </div>
+
+  <script>
+    const form = document.getElementById("form");
+    const urlEl = document.getElementById("url");
+    const goBtn = document.getElementById("go");
+    const progress = document.getElementById("progress");
+    const s1 = document.getElementById("s1");
+    const s2 = document.getElementById("s2");
+    const s3 = document.getElementById("s3");
+
+    function mark(el, cls, withSpin) {
+      el.className = "step " + cls;
+      el.innerHTML = (withSpin ? '<span class="spin"></span>' : (cls === "done" ? "✓ " : cls === "err" ? "✗ " : "")) + el.dataset.label;
+    }
+    [s1, s2, s3].forEach((el) => (el.dataset.label = el.textContent));
+
+    function goToTalk(domain) {
+      const q = domain ? ("?domain=" + encodeURIComponent(domain)) : "";
+      window.location.href = "/talk" + q;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const raw = urlEl.value.trim();
+      if (!raw) return;
+      goBtn.disabled = true;
+      urlEl.disabled = true;
+      progress.classList.add("show");
+      mark(s1, "active", true);
+      mark(s2, "");
+      mark(s3, "");
+
+      try {
+        const resp = await fetch("/api/research", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: raw }),
+        });
+        mark(s1, "done");
+        mark(s2, "active", true);
+        const data = await resp.json();
+        if (!resp.ok || data.error) {
+          throw new Error(data.error || ("HTTP " + resp.status));
+        }
+        mark(s2, "done");
+        mark(s3, "active", true);
+        setTimeout(() => goToTalk(data.domain), 500);
+      } catch (err) {
+        mark(s2, "err");
+        s2.dataset.label = "Research failed: " + err.message + " — starting anyway.";
+        mark(s2, "err");
+        // Don't block the user — proceed to the voice page regardless.
+        setTimeout(() => goToTalk(null), 1400);
+      }
+    });
+
+    document.getElementById("skip").addEventListener("click", (e) => {
+      e.preventDefault();
+      goToTalk(null);
+    });
+  </script>
+</body>
+</html>

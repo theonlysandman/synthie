@@ -36,7 +36,7 @@ from azure.core.exceptions import HttpResponseError
 # ---------------------------------------------------------------------------
 load_dotenv()
 
-_REQUIRED = ["PROJECT_ENDPOINT", "MODEL_DEPLOYMENT_NAME", "AGENT_NAME"]
+_REQUIRED = ["PROJECT_ENDPOINT", "AGENT_NAME"]
 _missing = [v for v in _REQUIRED if not os.environ.get(v)]
 if _missing:
     sys.exit(
@@ -47,7 +47,13 @@ if _missing:
     )
 
 PROJECT_ENDPOINT: str = os.environ["PROJECT_ENDPOINT"]
-MODEL_DEPLOYMENT_NAME: str = os.environ["MODEL_DEPLOYMENT_NAME"]
+# The Foundry AGENT brain must be a Responses-API-compatible chat model
+# (e.g. gpt-4.1, gpt-5.2) — NOT a realtime model like gpt-realtime-2, which the
+# Foundry agent service Responses API rejects. The realtime voice layer is a
+# separate concern handled by Voice Live's connect(model=...) at runtime.
+AGENT_MODEL: str = os.environ.get("AGENT_MODEL") or os.environ.get("MODEL_DEPLOYMENT_NAME", "")
+if not AGENT_MODEL:
+    sys.exit("ERROR: Set AGENT_MODEL (a Responses-compatible chat deployment, e.g. gpt-4.1) in .env.")
 AGENT_NAME: str = os.environ["AGENT_NAME"]
 PERSONA_FILE: str = os.environ.get("PERSONA_FILE", "")
 
@@ -121,7 +127,7 @@ with AIProjectClient(endpoint=PROJECT_ENDPOINT, credential=credential) as client
         agent = client.agents.create_version(
             agent_name=AGENT_NAME,
             definition=PromptAgentDefinition(
-                model=MODEL_DEPLOYMENT_NAME,
+                model=AGENT_MODEL,
                 instructions=INSTRUCTIONS,
             ),
         )
@@ -132,12 +138,12 @@ with AIProjectClient(endpoint=PROJECT_ENDPOINT, credential=credential) as client
             f"  Version: {agent.version}"
         )
     else:
-        print(f"\nCreating agent '{AGENT_NAME}' with model '{MODEL_DEPLOYMENT_NAME}'...")
+        print(f"\nCreating agent '{AGENT_NAME}' with model '{AGENT_MODEL}'...")
         try:
             agent = client.agents.create_version(
                 agent_name=AGENT_NAME,
                 definition=PromptAgentDefinition(
-                    model=MODEL_DEPLOYMENT_NAME,
+                    model=AGENT_MODEL,
                     instructions=INSTRUCTIONS,
                 ),
             )
@@ -146,7 +152,7 @@ with AIProjectClient(endpoint=PROJECT_ENDPOINT, credential=credential) as client
                 f"ERROR: Failed to create agent.\n"
                 f"  HTTP {exc.status_code} — {exc.reason}\n"
                 f"  {exc.message}\n\n"
-                "Check that MODEL_DEPLOYMENT_NAME is correct and the deployment "
+                "Check that AGENT_MODEL is correct and the deployment "
                 "is in a 'Succeeded' state:\n"
                 "  az cognitiveservices account deployment show "
                 "-n <account> -g <rg> --deployment-name <name>"
