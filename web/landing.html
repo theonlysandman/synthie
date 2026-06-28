@@ -74,6 +74,20 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .skip { margin-top: 1rem; font-size: 0.8rem; }
     .skip a { color: #6e7681; }
+    #errbox { display: none; margin-top: 1.2rem; }
+    #errbox.show { display: block; }
+    #errmsg {
+      margin: 0 0 0.9rem; font-size: 0.9rem; line-height: 1.5;
+      color: #ff7b72;
+      background: rgba(248, 81, 73, 0.08);
+      border: 1px solid rgba(248, 81, 73, 0.35);
+      border-radius: 10px; padding: 0.7rem 0.9rem;
+    }
+    .erractions { display: flex; gap: 0.6rem; }
+    button.ghost {
+      background: transparent; color: #e6edf3;
+      border: 1px solid #30363d; font-weight: 500;
+    }
   </style>
 </head>
 <body>
@@ -84,16 +98,24 @@
     <form id="form">
       <label for="url">Customer website</label>
       <div class="field">
-        <input id="url" type="text" placeholder="example.com" autocomplete="off" autofocus />
+        <input id="url" type="text" placeholder="example.com" value="optiviqinc.com" autocomplete="off" autofocus />
         <button id="go" type="submit">Research &amp; start</button>
       </div>
-      <div class="hint">We pull public pages (about, products, industry) to pre-load context. Cached after the first time.</div>
+      <div class="hint">We pull public search results about the domain to pre-load context — we don't scrape the site itself. Cached after the first time.</div>
     </form>
 
     <div id="progress">
-      <div class="step" id="s1">Fetching the website…</div>
+      <div class="step" id="s1">Searching the web…</div>
       <div class="step" id="s2">Analyzing the business…</div>
       <div class="step" id="s3">Preparing your session…</div>
+    </div>
+
+    <div id="errbox">
+      <p id="errmsg"></p>
+      <div class="erractions">
+        <button type="button" id="retry">Try again</button>
+        <button type="button" id="continue" class="ghost">Continue without research</button>
+      </div>
     </div>
 
     <div class="skip"><a href="#" id="skip">Skip — just start talking</a></div>
@@ -107,6 +129,10 @@
     const s1 = document.getElementById("s1");
     const s2 = document.getElementById("s2");
     const s3 = document.getElementById("s3");
+    const errbox = document.getElementById("errbox");
+    const errmsg = document.getElementById("errmsg");
+    const retryBtn = document.getElementById("retry");
+    const continueBtn = document.getElementById("continue");
 
     function mark(el, cls, withSpin) {
       el.className = "step " + cls;
@@ -119,10 +145,29 @@
       window.location.href = "/talk" + q;
     }
 
+    function resetForm() {
+      goBtn.disabled = false;
+      urlEl.disabled = false;
+      urlEl.focus();
+    }
+
+    function showError(message) {
+      // Pause here — surface the error and let the user decide what to do next.
+      errmsg.textContent = message;
+      errbox.classList.add("show");
+      resetForm();
+    }
+
+    function clearError() {
+      errbox.classList.remove("show");
+      errmsg.textContent = "";
+    }
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const raw = urlEl.value.trim();
       if (!raw) return;
+      clearError();
       goBtn.disabled = true;
       urlEl.disabled = true;
       progress.classList.add("show");
@@ -144,15 +189,38 @@
         }
         mark(s2, "done");
         mark(s3, "active", true);
-        setTimeout(() => goToTalk(data.domain), 500);
+        // Be honest about how grounded the research is before we hand off.
+        const conf = (data.confidence || "").toLowerCase();
+        const co = data.company_name ? ("“" + data.company_name + "”") : "this business";
+        if (data.grounded && conf === "high") {
+          s3.dataset.label = "Got a solid read on " + co + " — starting…";
+        } else if (conf === "medium") {
+          s3.dataset.label = "Found some context — Synthie will confirm the details with you…";
+        } else {
+          s3.dataset.label = "Not much public info — Synthie will ask you a couple quick questions…";
+        }
+        mark(s3, "active", true);
+        setTimeout(() => goToTalk(data.domain), 900);
       } catch (err) {
+        // Stop and wait — don't silently start the session on a failed lookup.
+        mark(s1, "done");
         mark(s2, "err");
-        s2.dataset.label = "Research failed: " + err.message + " — starting anyway.";
-        mark(s2, "err");
-        // Don't block the user — proceed to the voice page regardless.
-        setTimeout(() => goToTalk(null), 1400);
+        mark(s3, "");
+        showError(
+          "Couldn't research that site (" + err.message + "). " +
+          "The website may be blocking automated access. Check the URL and try " +
+          "again, or continue without research."
+        );
       }
     });
+
+    retryBtn.addEventListener("click", () => {
+      clearError();
+      progress.classList.remove("show");
+      form.requestSubmit();
+    });
+
+    continueBtn.addEventListener("click", () => goToTalk(null));
 
     document.getElementById("skip").addEventListener("click", (e) => {
       e.preventDefault();

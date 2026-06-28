@@ -41,8 +41,11 @@
     }
     button:active { transform: scale(0.97); }
     #startBtn { background: #2ea043; color: white; }
+    #pauseBtn { background: #d29922; color: #1c1407; }
     #stopBtn { background: #da3633; color: white; }
     button:disabled { opacity: 0.4; cursor: not-allowed; }
+    .hidden { display: none !important; }
+    #controls { display: flex; gap: 0.75rem; justify-content: center; }
     #mic {
       width: 120px; height: 120px; border-radius: 50%;
       margin: 1.5rem 0; background: #161b22;
@@ -91,9 +94,10 @@
   <div id="status">Idle</div>
   <div id="mic">🎤</div>
 
-  <div>
-    <button id="startBtn">Start talking</button>
-    <button id="stopBtn" disabled>Stop</button>
+  <div id="controls">
+    <button id="startBtn">Start conversation</button>
+    <button id="pauseBtn" class="hidden">Pause conversation</button>
+    <button id="stopBtn" class="hidden">Stop conversation</button>
   </div>
 
   <div id="log"></div>

@@ -26,8 +26,10 @@ Optional env vars:
 """
 
 import asyncio
+import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -74,6 +76,8 @@ AZURE_VOICE: str = os.environ.get("AZURE_VOICE", "en-US-AvaNeural")
 PORT: int = int(os.environ.get("PORT", "8000"))
 
 _WEB_DIR = Path(__file__).parent / "web"
+_CONV_DIR = Path(__file__).parent / "conversations"
+_CONV_DIR.mkdir(exist_ok=True)
 
 app = FastAPI(title="Synthie Web")
 
@@ -104,9 +108,55 @@ async def api_research(payload: dict) -> JSONResponse:
     return JSONResponse({
         "domain": record.get("domain"),
         "cached": record.get("cached", False),
+        "grounded": record.get("grounded", False),
+        "confidence": (profile.get("confidence") or "").lower(),
         "company_name": profile.get("company_name"),
         "industry": profile.get("industry"),
     })
+
+
+@app.get("/api/conversations")
+async def list_conversations(domain: str = "") -> JSONResponse:
+    """List cached conversations, optionally filtered by ?domain=<host>.
+
+    Returns lightweight summaries (no transcript bodies). Pass a domain to get
+    only that customer's sessions, newest first.
+    """
+    slug = research.domain_of(domain) if domain else ""
+    summaries: list[dict] = []
+    for path in _CONV_DIR.glob("*.json"):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:  # noqa: BLE001
+            continue
+        if slug and data.get("domain") != slug:
+            continue
+        summaries.append({
+            "id": path.stem,
+            "domain": data.get("domain"),
+            "session_id": data.get("session_id"),
+            "started_at": data.get("started_at"),
+            "updated_at": data.get("updated_at"),
+            "turns": len(data.get("turns", [])),
+        })
+    summaries.sort(key=lambda s: s.get("started_at") or "", reverse=True)
+    return JSONResponse({"count": len(summaries), "conversations": summaries})
+
+
+@app.get("/api/conversations/{conv_id}")
+async def get_conversation(conv_id: str) -> JSONResponse:
+    """Return a single cached conversation (full transcript) by its id."""
+    # Guard against path traversal — only allow plain file stems.
+    if "/" in conv_id or "\\" in conv_id or ".." in conv_id:
+        return JSONResponse({"error": "Invalid id."}, status_code=400)
+    path = _CONV_DIR / f"{conv_id}.json"
+    if not path.is_file():
+        return JSONResponse({"error": "Not found."}, status_code=404)
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as e:  # noqa: BLE001
+        return JSONResponse({"error": str(e)}, status_code=500)
+    return JSONResponse(data)
 
 
 @app.websocket("/ws")
@@ -125,6 +175,40 @@ async def voice_relay(ws: WebSocket) -> None:
             print(f"[relay] loaded research for {domain}")
 
     credential = AzureCliCredential()
+
+    # Accumulate the conversation transcript and cache it to disk so each
+    # session is saved (turn-by-turn, so a disconnect doesn't lose it).
+    session_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    conv_slug = research.domain_of(domain) if domain else "no-domain"
+    conv_path = _CONV_DIR / f"{conv_slug}-{session_id}.json"
+    conversation: dict = {
+        "domain": conv_slug,
+        "session_id": session_id,
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "turns": [],
+    }
+    _assistant_buf: list[str] = []
+
+    def _save_conversation() -> None:
+        conversation["updated_at"] = datetime.now(timezone.utc).isoformat()
+        try:
+            conv_path.write_text(
+                json.dumps(conversation, indent=2, ensure_ascii=False),
+                encoding="utf-8",
+            )
+        except Exception as e:  # noqa: BLE001
+            print(f"[relay] failed to cache conversation: {e}")
+
+    def _add_turn(role: str, text: str) -> None:
+        text = (text or "").strip()
+        if not text:
+            return
+        conversation["turns"].append({
+            "role": role,
+            "text": text,
+            "at": datetime.now(timezone.utc).isoformat(),
+        })
+        _save_conversation()
 
     try:
         async with connect(
@@ -200,6 +284,16 @@ async def voice_relay(ws: WebSocket) -> None:
                         if etype == "error":
                             err = getattr(event, "error", event)
                             print(f"    error: {getattr(err, 'message', err)}")
+
+                    # Cache the conversation transcript turn-by-turn.
+                    if etype == "conversation.item.input_audio_transcription.completed":
+                        _add_turn("user", getattr(event, "transcript", "") or "")
+                    elif etype == "response.audio_transcript.delta":
+                        _assistant_buf.append(getattr(event, "delta", "") or "")
+                    elif etype == "response.done":
+                        _add_turn("synthie", "".join(_assistant_buf))
+                        _assistant_buf.clear()
+
                     await ws.send_json(event.as_dict())
 
             b2a = asyncio.create_task(browser_to_azure())
@@ -220,6 +314,14 @@ async def voice_relay(ws: WebSocket) -> None:
         except Exception:  # noqa: BLE001
             pass
     finally:
+        # Flush any partial assistant turn and persist the final transcript.
+        if _assistant_buf:
+            _add_turn("synthie", "".join(_assistant_buf))
+            _assistant_buf.clear()
+        if conversation["turns"]:
+            _save_conversation()
+            print(f"[relay] cached conversation -> {conv_path.name} "
+                  f"({len(conversation['turns'])} turns)")
         try:
             await ws.close()
         except Exception:  # noqa: BLE001

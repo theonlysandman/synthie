@@ -4,6 +4,7 @@
 const SAMPLE_RATE = 24000;
 
 const startBtn = document.getElementById("startBtn");
+const pauseBtn = document.getElementById("pauseBtn");
 const stopBtn = document.getElementById("stopBtn");
 const statusEl = document.getElementById("status");
 const micEl = document.getElementById("mic");
@@ -23,6 +24,8 @@ let micStream = null;
 let sourceNode = null;
 let processorNode = null;
 let sentChunks = 0;
+let paused = false;
+let openerDone = false;
 
 // Playback scheduling
 let playCtx = null;
@@ -155,7 +158,9 @@ function handleEvent(evt) {
   switch (type) {
     case "session.created":
     case "session.updated":
-      setStatus("Live — speak now", "live");
+      // Synthie speaks first — don't invite the user to talk yet.
+      setStatus("Synthie is speaking…", "live");
+      micEl.className = "speaking";
       break;
 
     case "input_audio_buffer.speech_started":
@@ -178,7 +183,7 @@ function handleEvent(evt) {
       break;
 
     case "response.audio.delta":
-      if (evt.delta) {
+      if (evt.delta && !paused) {
         audioDeltasReceived++;
         try {
           playChunk(base64ToInt16(evt.delta));
@@ -192,6 +197,14 @@ function handleEvent(evt) {
 
     case "response.done":
       currentSynthieRow = null;
+      // Once Synthie's opener finishes, it's the user's turn.
+      if (!openerDone) {
+        openerDone = true;
+        if (!paused) {
+          setStatus("Your turn — speak now", "live");
+          micEl.className = "listening";
+        }
+      }
       break;
 
     case "error":
@@ -242,8 +255,15 @@ async function start() {
   ws = new WebSocket(wsUrl);
 
   ws.onopen = () => {
-    setStatus("Live — speak now", "live");
-    micEl.className = "listening";
+    setStatus("Synthie is speaking…", "live");
+    micEl.className = "speaking";
+    paused = false;
+    openerDone = false;
+    startBtn.classList.add("hidden");
+    pauseBtn.classList.remove("hidden");
+    pauseBtn.textContent = "Pause conversation";
+    pauseBtn.disabled = false;
+    stopBtn.classList.remove("hidden");
     stopBtn.disabled = false;
 
     sourceNode = audioCtx.createMediaStreamSource(micStream);
@@ -251,7 +271,7 @@ async function start() {
 
     sentChunks = 0;
     processorNode.onaudioprocess = (e) => {
-      if (!ws || ws.readyState !== WebSocket.OPEN) return;
+      if (!ws || ws.readyState !== WebSocket.OPEN || paused) return;
       const input = e.inputBuffer.getChannelData(0);
       const resampled = resample(input, audioCtx.sampleRate, SAMPLE_RATE);
       const pcm16 = floatTo16BitPCM(resampled);
@@ -285,7 +305,24 @@ async function start() {
   };
 
   ws.onerror = () => setStatus("Connection error", "error");
-  ws.onclose = () => { if (stopBtn.disabled === false) stop(); };
+  ws.onclose = () => { if (!stopBtn.classList.contains("hidden")) stop(); };
+}
+
+function togglePause() {
+  if (!ws) return;
+  paused = !paused;
+  if (paused) {
+    // Pause: stop streaming mic audio and silence any queued playback,
+    // but keep the WebSocket and Voice Live session alive.
+    flushPlayback();
+    pauseBtn.textContent = "Resume conversation";
+    micEl.className = "";
+    setStatus("Paused", "");
+  } else {
+    pauseBtn.textContent = "Pause conversation";
+    micEl.className = "listening";
+    setStatus("Live — speak now", "live");
+  }
 }
 
 function stop() {
@@ -296,11 +333,15 @@ function stop() {
   if (ws) { ws.close(); ws = null; }
   flushPlayback();
 
+  paused = false;
   micEl.className = "";
   setStatus("Stopped");
+  startBtn.classList.remove("hidden");
   startBtn.disabled = false;
-  stopBtn.disabled = true;
+  pauseBtn.classList.add("hidden");
+  stopBtn.classList.add("hidden");
 }
 
 startBtn.addEventListener("click", start);
+pauseBtn.addEventListener("click", togglePause);
 stopBtn.addEventListener("click", stop);

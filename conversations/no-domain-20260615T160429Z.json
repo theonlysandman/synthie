@@ -1,0 +1,23 @@
+{
+  "domain": "no-domain",
+  "session_id": "20260615T160429Z",
+  "started_at": "2026-06-15T16:04:29.600288+00:00",
+  "turns": [
+    {
+      "role": "synthie",
+      "text": "I'm Synthie. I'll help you discover great AI use cases for the first Digital Decision you want to sell. I'll ask you questions one at a time — just talk freely, give me everything you've got, don't worry about length or rambling.\n\nFirst question:\n\n**Q1 — What industry are you selling into?** Tell me the location, your history with the customer, and as much detail as you have.",
+      "at": "2026-06-15T16:04:40.216729+00:00"
+    },
+    {
+      "role": "user",
+      "text": "You repeat that?",
+      "at": "2026-06-15T16:04:51.366959+00:00"
+    },
+    {
+      "role": "synthie",
+      "text": "Absolutely. Here’s my opener:\n\nI'm Synthie. I'll help you discover great AI use cases for the first Digital Decision you want to sell. I'll ask you questions one at a time — just talk freely, give me everything you've got, don't worry about length or rambling.\n\nFirst question:\n\n**What industry are you selling into?** Tell me the location, your history with the customer, and as much detail as you have.",
+      "at": "2026-06-15T16:04:56.474999+00:00"
+    }
+  ],
+  "updated_at": "2026-06-15T16:05:09.391389+00:00"
+}

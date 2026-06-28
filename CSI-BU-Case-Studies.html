@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en-CA" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>CSI + Microsoft Partnership Microsite</title>
+<script>
+  (() => {
+    const param = new URLSearchParams(window.location.search).get("scoutTheme");
+    const theme =
+      param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.setAttribute("data-theme", theme);
+  })();
+</script>
+<style>
+:root {
+  color-scheme: light;
+  --cp-bg: #f7f4ef;
+  --cp-bg-elevated: #fcfbf8;
+  --cp-surface: #ffffff;
+  --cp-surface-soft: #f5f5f5;
+  --cp-border: #dedede;
+  --cp-border-strong: #919191;
+  --cp-text: #242424;
+  --cp-text-muted: #5c5c5c;
+  --cp-text-soft: #6f6f6f;
+  --cp-accent: #b11f4b;
+  --cp-accent-hover: #9a1a41;
+  --cp-accent-soft: rgba(177, 31, 75, 0.08);
+  --cp-accent-fg: #ffffff;
+  --cp-success: #16a34a;
+  --cp-danger: #dc2626;
+  --cp-warning: #f59e0b;
+  --cp-link: #0078d4;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+  --cp-overlay: rgba(255, 255, 255, 0.8);
+  --cp-panel: rgba(255, 255, 255, 0.86);
+  --cp-panel-strong: rgba(255, 255, 255, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.55);
+  --cp-highlight: rgba(177, 31, 75, 0.12);
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --cp-bg: #3d3b3a;
+  --cp-bg-elevated: #343231;
+  --cp-surface: #292929;
+  --cp-surface-soft: #2e2e2e;
+  --cp-border: #474747;
+  --cp-border-strong: #5f5f5f;
+  --cp-text: #dedede;
+  --cp-text-muted: #919191;
+  --cp-text-soft: #b0b0b0;
+  --cp-accent: #fd8ea1;
+  --cp-accent-hover: #fb7b91;
+  --cp-accent-soft: rgba(253, 142, 161, 0.14);
+  --cp-accent-fg: #1a1a1a;
+  --cp-success: #4ade80;
+  --cp-danger: #f87171;
+  --cp-warning: #fbbf24;
+  --cp-link: #4da6ff;
+  --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+  --cp-overlay: rgba(41, 41, 41, 0.88);
+  --cp-panel: rgba(41, 41, 41, 0.72);
+  --cp-panel-strong: rgba(41, 41, 41, 0.96);
+  --cp-sheen: rgba(255, 255, 255, 0.04);
+  --cp-highlight: rgba(253, 142, 161, 0.12);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--cp-bg);
+  color:var(--cp-text);
+  font-family:"Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--cp-link);text-decoration:none}
+a:hover{text-decoration:underline}
+.shell{max-width:1180px;margin:0 auto;padding:0 24px}
+.hero{
+  position:relative;
+  overflow:hidden;
+  border-bottom:1px solid var(--cp-border);
+  background:var(--cp-bg-elevated);
+}
+.hero::before,.hero::after{
+  content:"";
+  position:absolute;
+  inset:auto;
+  border-radius:999px;
+  background:var(--cp-accent-soft);
+  pointer-events:none;
+}
+.hero::before{width:420px;height:420px;top:-160px;right:-120px}
+.hero::after{width:280px;height:280px;bottom:-140px;left:-110px}
+.nav{
+  position:relative;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:20px 0;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:800;
+  letter-spacing:-0.2px;
+}
+.mark{
+  display:inline-grid;
+  place-items:center;
+  width:38px;
+  height:38px;
+  border-radius:0.625rem;
+  background:var(--cp-accent);
+  color:var(--cp-accent-fg);
+  font-weight:900;
+}
+.brand span:last-child{color:var(--cp-text-muted);font-weight:700}
+.links{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.links a{
+  border:1px solid var(--cp-border);
+  border-radius:999px;
+  color:var(--cp-text);
+  padding:8px 13px;
+  background:var(--cp-panel);
+  font-size:13px;
+  font-weight:700;
+}
+.links a:hover{border-color:var(--cp-accent);text-decoration:none}
+.hero-grid{
+  position:relative;
+  z-index:1;
+  display:grid;
+  grid-template-columns:1fr;
+  padding:56px 0 58px;
+}
+.eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  color:var(--cp-accent);
+  text-transform:uppercase;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:1.7px;
+}
+h1,h2,h3,p{margin-top:0}
+h1{
+  max-width:820px;
+  margin:12px 0 16px;
+  font-size:clamp(38px,6vw,72px);
+  line-height:0.98;
+  letter-spacing:-2.8px;
+}
+.hero p{
+  max-width:760px;
+  color:var(--cp-text-muted);
+  font-size:18px;
+}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+.btn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  border-radius:0.625rem;
+  padding:11px 16px;
+  border:1px solid var(--cp-border);
+  background:var(--cp-surface);
+  color:var(--cp-text);
+  font-weight:800;
+}
+.btn.primary{background:var(--cp-accent);border-color:var(--cp-accent);color:var(--cp-accent-fg)}
+.btn:hover{text-decoration:none;border-color:var(--cp-accent)}
+main{padding:42px 0 64px}
+.section{margin-top:42px}
+.section:first-child{margin-top:0}
+.section-head{
+  display:flex;
+  justify-content:space-between;
+  gap:24px;
+  align-items:end;
+  margin-bottom:18px;
+}
+.section-head h2{
+  margin:0;
+  font-size:clamp(28px,4vw,44px);
+  line-height:1.05;
+  letter-spacing:-1.4px;
+}
+.section-head p{
+  margin:0;
+  max-width:500px;
+  color:var(--cp-text-muted);
+  font-size:15px;
+}
+.grid{display:grid;gap:16px}
+.cols-3{grid-template-columns:repeat(3,1fr)}
+.cols-4{grid-template-columns:repeat(4,1fr)}
+.cols-2{grid-template-columns:repeat(2,1fr)}
+.card{
+  border:1px solid var(--cp-border);
+  border-radius:16px;
+  background:var(--cp-surface);
+  padding:22px;
+  box-shadow:0 0 2px var(--cp-shadow),0 1px 2px var(--cp-shadow);
+}
+.card.soft{background:var(--cp-bg-elevated)}
+.kicker{
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  border:1px solid var(--cp-border);
+  background:var(--cp-accent-soft);
+  color:var(--cp-accent);
+  padding:3px 9px;
+  font-size:11px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:0.9px;
+}
+.card h3{margin:12px 0 7px;font-size:20px;line-height:1.2}
+.card p,.card li{color:var(--cp-text-muted)}
+.card p:last-child{margin-bottom:0}
+.metric{
+  margin-top:14px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+.metric div{
+  border:1px solid var(--cp-border);
+  border-radius:0.625rem;
+  background:var(--cp-surface-soft);
+  padding:10px;
+}
+.metric strong{display:block;color:var(--cp-accent);font-size:22px;line-height:1}
+.metric span{display:block;color:var(--cp-text-muted);font-size:11px;margin-top:5px;font-weight:700}
+.timeline{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+.step{
+  position:relative;
+  border:1px solid var(--cp-border);
+  border-radius:16px;
+  background:var(--cp-surface);
+  padding:16px;
+}
+.step .date{font-size:12px;color:var(--cp-accent);font-weight:900;text-transform:uppercase;letter-spacing:0.9px}
+.step .title{font-weight:800;margin-top:6px}
+.step p{font-size:13px;margin:4px 0 0;color:var(--cp-text-muted)}
+.case-card{
+  display:grid;
+  gap:16px;
+  border-left:6px solid var(--cp-accent);
+}
+.case-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.case-title h3{font-size:26px;margin:5px 0 5px;letter-spacing:-0.7px}
+.badge{
+  white-space:nowrap;
+  border:1px solid var(--cp-border);
+  border-radius:999px;
+  padding:5px 10px;
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:0.9px;
+  color:var(--cp-accent);
+  background:var(--cp-accent-soft);
+}
+.goal-alignment{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+}
+.goal-label{
+  color:var(--cp-text-muted);
+  font-size:12px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:0.9px;
+}
+.goal-chip{
+  border:1px solid var(--cp-border);
+  border-radius:999px;
+  background:var(--cp-surface-soft);
+  color:var(--cp-text);
+  padding:5px 10px;
+  font-size:12px;
+  font-weight:800;
+}
+.quote{
+  border:1px dashed var(--cp-border-strong);
+  border-radius:16px;
+  padding:18px;
+  background:var(--cp-bg-elevated);
+}
+.quote blockquote{margin:0;color:var(--cp-text);font-size:18px;font-weight:700;line-height:1.45}
+.quote p{margin:8px 0 0;font-size:13px}
+.mini-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:14px}
+.mini-table th,.mini-table td{border-bottom:1px solid var(--cp-border);padding:11px 10px;text-align:left;vertical-align:top}
+.mini-table th{color:var(--cp-text-muted);font-size:11px;text-transform:uppercase;letter-spacing:0.9px;background:var(--cp-surface-soft)}
+.mini-table tr:last-child td{border-bottom:0}
+.num{font-variant-numeric:tabular-nums;font-weight:900;color:var(--cp-accent);white-space:nowrap}
+.programs{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.program-list{display:grid;gap:10px;margin-top:12px}
+.program{
+  border:1px solid var(--cp-border);
+  border-radius:0.625rem;
+  padding:12px;
+  background:var(--cp-surface-soft);
+}
+.program strong{display:block}
+.program span{display:block;color:var(--cp-text-muted);font-size:13px;margin-top:2px}
+.macc{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  margin-top:12px;
+}
+.yes,.no{
+  border-radius:16px;
+  border:1px solid var(--cp-border);
+  padding:16px;
+  background:var(--cp-surface);
+}
+.yes h4,.no h4{margin:0 0 8px;font-size:15px;color:var(--cp-accent)}
+ul{margin:8px 0 0;padding-left:20px}
+li{margin:6px 0}
+.callout{
+  border:1px solid var(--cp-border);
+  border-radius:16px;
+  padding:18px 20px;
+  background:var(--cp-accent-soft);
+  color:var(--cp-text);
+}
+.callout strong{color:var(--cp-accent)}
+footer{
+  border-top:1px solid var(--cp-border);
+  color:var(--cp-text-muted);
+  font-size:12px;
+  padding:24px 0 36px;
+}
+.footgrid{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media (max-width:900px){
+  .hero-grid,.cols-3,.cols-4,.cols-2,.timeline,.programs,.macc{grid-template-columns:1fr}
+  .section-head{display:block}
+  .section-head p{margin-top:10px}
+}
+@media (max-width:620px){
+  .shell{padding:0 16px}
+  .nav{align-items:flex-start;flex-direction:column}
+  .links{justify-content:flex-start}
+  .hero-grid{padding:36px 0}
+  .metric{grid-template-columns:1fr}
+}
+@media print{
+  html{scroll-behavior:auto}
+  body{background:var(--cp-surface)}
+  .links,.hero-actions{display:none}
+  .hero{border-bottom:0}
+  .card,.step{box-shadow:none;break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="shell">
+    <nav class="nav" aria-label="Primary">
+      <div class="brand" aria-label="CSI and Microsoft">
+        <span class="mark">CSI</span>
+        <span>+</span>
+        <span>Microsoft</span>
+      </div>
+      <div class="links">
+        <a href="#goals">Goals &amp; status</a>
+        <a href="#case-studies">Case studies</a>
+        <a href="#how-we-work">How we work together</a>
+      </div>
+    </nav>
+
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow">Partnership microsite</span>
+        <h1>Scaling modernization and AI across CSI business units.</h1>
+        <p>
+          A working hub for the CSI-Microsoft partnership: what we are trying to accomplish,
+          where the portfolio stands, proof points from business units, and the practical motions
+          CSI teams can use to turn Azure, Fabric, AI, GitHub, and partner programs into measurable outcomes.
+        </p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#case-studies">Explore case studies</a>
+          <a class="btn" href="#how-we-work">See operating model</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="shell">
+    <section class="section" id="goals">
+      <div class="section-head">
+        <h2>Partnership goals and status</h2>
+        <p>Four shared goals guide the CSI-Microsoft partnership: revenue growth, purposeful modernization, employee productivity, and trust through security.</p>
+      </div>
+      <div class="grid cols-4">
+        <article class="card">
+          <span class="kicker">Goal 1</span>
+          <h3>Unlock AI revenue</h3>
+          <p>Help CSI companies package AI into differentiated product capability, premium features, new offerings, and customer value that can expand revenue.</p>
+        </article>
+        <article class="card">
+          <span class="kicker">Goal 2</span>
+          <h3>Modernize with purpose</h3>
+          <p>Prioritize modernization that clearly drives revenue and/or reduces cost through better platforms, lower infrastructure debt, and faster product delivery.</p>
+        </article>
+        <article class="card">
+          <span class="kicker">Goal 3</span>
+          <h3>Support CSI employees</h3>
+          <p>Equip CSI teams to evolve the way they work so they can ship, sell, and support faster and better with Microsoft tools, AI, and repeatable practices.</p>
+        </article>
+        <article class="card">
+          <span class="kicker">Goal 4</span>
+          <h3>Secure products and people</h3>
+          <p>Reduce risk and build customer trust by strengthening the security posture of CSI products, platforms, employees, and customer-facing operations.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="case-studies">
+      <div class="section-head">
+        <h2>Case studies</h2>
+        <p>Each case study captures the same dimensions: Microsoft investments, time to implement, upfront and ongoing costs, costs saved, and measurable business benefits. Public examples shared by Sandy Ward on June 22, 2026 are now included.</p>
+      </div>
+
+      <div class="grid">
+        <article class="card case-card">
+          <div class="case-top">
+            <div class="case-title">
+              <span class="kicker">Ready · Modernization + AI</span>
+              <h3>Trapeze: Azure migration as the launchpad for AI</h3>
+              <p>Helping Trapeze become a truly agentic software company by eliminating legacy hardware and infrastructure debt, then making Azure the standard platform for premium AI features.</p>
+            </div>
+            <span class="badge">In progress</span>
+          </div>
+          <div class="metric" aria-label="Trapeze projected metrics">
+            <div><strong>$387K</strong><span>Projected annual savings at migration</span></div>
+            <div><strong>$668K</strong><span>Projected annual savings after optimization</span></div>
+            <div><strong>$1.99M</strong><span>Projected hardware refresh avoided</span></div>
+          </div>
+          <div class="goal-alignment" aria-label="Trapeze goal alignment">
+            <span class="goal-label">Ladders up to</span>
+            <span class="goal-chip">Unlock AI revenue</span>
+            <span class="goal-chip">Modernize with purpose</span>
+            <span class="goal-chip">Secure products and people</span>
+          </div>
+          <table class="mini-table">
+            <thead><tr><th>Dimension</th><th>Current working view</th></tr></thead>
+            <tbody>
+              <tr><td>Microsoft investments</td><td>ECIF-funded PwC delivery, Cloud Migration Factory, Azure technical specialists, account-team orchestration, ACO credits, and preferential Azure economics.</td></tr>
+              <tr><td>Time to implement</td><td>20-week engagement from the week of June 22, 2026 through November 6, 2026.</td></tr>
+              <tr><td>Costs</td><td>Migration delivery largely Microsoft-funded; BU bridge cost model includes a projected $479K dual-run period and ongoing Azure consumption.</td></tr>
+              <tr><td>Savings</td><td>Legacy hardware retirement, refresh avoidance, right-sizing, reserved capacity or savings-plan optimization, and no incremental SQL licensing cost.</td></tr>
+              <tr><td>Measurable benefits</td><td>350+ VMs migrated, Azure becomes the standard development platform, Fabric and AI foundations enable premium features and customer-retention upside.</td></tr>
+            </tbody>
+          </table>
+          <div class="quote">
+            <blockquote>"The migration is not just a cost exercise; it is the platform move that lets Trapeze build and scale AI capability faster."</blockquote>
+            <p>Placeholder leader quote for CSI / Trapeze / Volaris validation.</p>
+          </div>
+        </article>
+
+        <article class="card case-card">
+          <div class="case-top">
+            <div class="case-title">
+              <span class="kicker">Public proof point · API modernization + AI</span>
+              <h3>Optimal Blue: API-first mortgage platform and lender AI assistants</h3>
+              <p>Optimal Blue, a fintech and CSI company, went all-in on Azure API Management to support mortgage-market scale, then worked with Microsoft product teams and the Dallas Microsoft Technology Center to ship generative AI assistant capabilities for lenders.</p>
+            </div>
+            <span class="badge">Public</span>
+          </div>
+          <div class="metric" aria-label="Optimal Blue public metrics">
+            <div><strong>42%</strong><span>Of U.S. mortgages locked through the platform</span></div>
+            <div><strong>4M+</strong><span>API calls served each day</span></div>
+            <div><strong>30 hrs</strong><span>Saved per manager per month by AI assistants</span></div>
+          </div>
+          <div class="goal-alignment" aria-label="Optimal Blue goal alignment">
+            <span class="goal-label">Ladders up to</span>
+            <span class="goal-chip">Unlock AI revenue</span>
+            <span class="goal-chip">Modernize with purpose</span>
+            <span class="goal-chip">Support CSI employees</span>
+          </div>
+          <table class="mini-table">
+            <thead><tr><th>Dimension</th><th>Current working view</th></tr></thead>
+            <tbody>
+              <tr><td>Microsoft investments</td><td>Azure API Management platform support, Microsoft product-group collaboration, and Dallas Microsoft Technology Center engagement for AI-assistant design and execution.</td></tr>
+              <tr><td>Time to implement</td><td>API Management motion went live in months with a small crew; AI assistants shipped as a follow-on product innovation motion.</td></tr>
+              <tr><td>Costs</td><td>Public information emphasizes business value and speed rather than full cost breakdown; AI assistant capabilities were delivered at no extra cost to clients.</td></tr>
+              <tr><td>Savings</td><td>Operational leverage from letting the team focus on the business instead of infrastructure, plus roughly 30 hours per month saved per manager through AI assistants.</td></tr>
+              <tr><td>Measurable benefits</td><td>Mortgage-industry scale through APIs, 4M+ daily API calls, 42% of U.S. mortgages locked, and AI-enabled lender productivity.</td></tr>
+            </tbody>
+          </table>
+        </article>
+
+        <article class="card case-card">
+          <div class="case-top">
+            <div class="case-title">
+              <span class="kicker">Public proof point · Healthcare cloud + AI pipeline</span>
+              <h3>Altera Paragon: cloud EMR resilience, clinical outcomes, and faster feature delivery</h3>
+              <p>Paragon, part of Altera, moved medical records to Azure with customer Gippsland Health Alliance, improving clinical outcomes and resilience. Microsoft is also supporting newer Paragon modernization and AI work.</p>
+            </div>
+            <span class="badge">Public + in flight</span>
+          </div>
+          <div class="metric" aria-label="Paragon public metrics">
+            <div><strong>50%</strong><span>Fewer medication errors reported</span></div>
+            <div><strong>300-800</strong><span>User scale without added effort</span></div>
+            <div><strong>First</strong><span>EMR system restored after cyberattack</span></div>
+          </div>
+          <div class="goal-alignment" aria-label="Paragon goal alignment">
+            <span class="goal-label">Ladders up to</span>
+            <span class="goal-chip">Unlock AI revenue</span>
+            <span class="goal-chip">Modernize with purpose</span>
+            <span class="goal-chip">Secure products and people</span>
+          </div>
+          <table class="mini-table">
+            <thead><tr><th>Dimension</th><th>Current working view</th></tr></thead>
+            <tbody>
+              <tr><td>Microsoft investments</td><td>Azure healthcare workload support, ongoing Microsoft-led code modernization with Genzeon, and Microsoft Cloud Acceleration Factory support for a revenue-cycle-management AI use case.</td></tr>
+              <tr><td>Time to implement</td><td>Public Gippsland Health cloud EMR deployment is already live; Paragon code modernization and RCM AI work are newer engagements currently in flight.</td></tr>
+              <tr><td>Costs</td><td>Public details do not include full implementation or run-cost figures; current modernization should be sized with Altera / Paragon leadership and the Microsoft delivery team.</td></tr>
+              <tr><td>Savings</td><td>Operational savings are implied through scalability without added effort, faster time-to-market for new features, and improved resilience after a cyberattack.</td></tr>
+              <tr><td>Measurable benefits</td><td>Around 50% fewer medication errors, scale from 300 to 800 users without added effort, and the EMR became the first system back online after a cyberattack.</td></tr>
+            </tbody>
+          </table>
+        </article>
+
+        <div class="grid cols-2">
+          <article class="card soft">
+            <span class="kicker">Altera follow-up</span>
+            <h3>Suggested next sprint: quantify Paragon and Altera impact</h3>
+            <p>Use Farley's ask to request a one-week sizing sprint with Altera / Paragon leadership: confirm Microsoft and BU resources, implementation timeline, upfront and ongoing costs, Azure consumption impact, feature-delivery acceleration, and measurable RCM AI outcomes.</p>
+          </article>
+          <article class="card soft">
+            <span class="kicker">Pipeline</span>
+            <h3>Next candidates</h3>
+            <ul>
+              <li>Lutra / Ripple: AI build and agentic accelerator success story.</li>
+              <li>CSI Cloud Migration Factory pilot: roughly 700 VMs across 5 entities in 16 weeks.</li>
+              <li>Sirsi: datacenter and VMware migration to Azure.</li>
+              <li>Omegro: Frontier Firm Success Framework, SLMs, intelligent document processing, and Copilot adoption.</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="how-we-work">
+      <div class="section-head">
+        <h2>How we work together</h2>
+        <p>A practical operating model for CSI BUs: identify the workload, select the right Microsoft motion, design for eligible Azure consumption, and measure both commitment drawdown and BU value.</p>
+      </div>
+
+      <div class="programs">
+        <article class="card">
+          <span class="kicker">Technology stack</span>
+          <h3>Microsoft tech to assemble by use case</h3>
+          <div class="program-list">
+            <div class="program"><strong>Azure landing zones and migration services</strong><span>Azure Migrate, Azure VMware Solution, networking, security, monitoring, backup, disaster recovery, and FinOps controls.</span></div>
+            <div class="program"><strong>Data and analytics foundation</strong><span>Microsoft Fabric, OneLake, Power BI, Azure SQL, Synapse patterns, and governed data products for AI-ready workloads.</span></div>
+            <div class="program"><strong>AI and agentic product development</strong><span>Azure AI Foundry, Azure OpenAI, model evaluation, responsible AI controls, retrieval patterns, and custom copilots or agents.</span></div>
+            <div class="program"><strong>Developer velocity</strong><span>GitHub Enterprise, GitHub Copilot, DevOps pipelines, secure supply chain, infrastructure as code, and app modernization patterns.</span></div>
+            <div class="program"><strong>Productivity and business apps</strong><span>Microsoft 365 Copilot, Teams, Power Platform, Dynamics, and workflow automation where they support BU operating leverage.</span></div>
+          </div>
+        </article>
+
+        <article class="card">
+          <span class="kicker">Programs to tap</span>
+          <h3>Partnership motions and funding paths</h3>
+          <div class="program-list">
+            <div class="program"><strong>ECIF</strong><span>Microsoft co-investment for qualified partner delivery, assessments, pilots, migrations, workshops, and proof-of-value work.</span></div>
+            <div class="program"><strong>Azure credits / ACO</strong><span>Credits that can offset approved migration, pilot, or dual-run periods when structured through the account team.</span></div>
+            <div class="program"><strong>Cloud Migration Factory</strong><span>Industrialized assessment, wave planning, migration execution, runbooks, and factory squads for repeatable BU migrations.</span></div>
+            <div class="program"><strong>Azure Migrate and Modernize / Azure Innovate</strong><span>Programmatic funding, partners, assessments, and technical resources for qualified modernization, data, and AI workloads.</span></div>
+            <div class="program"><strong>MTC, FastTrack, CSA, and specialist teams</strong><span>Architecture design sessions, technical depth, executive briefings, adoption guidance, escalation paths, and launch support.</span></div>
+          </div>
+        </article>
+      </div>
+
+      <article class="card" style="margin-top:16px">
+        <span class="kicker">MACC mechanics</span>
+        <h3>What typically decrements the Microsoft Azure Consumption Commitment</h3>
+        <p>As a working rule, eligible Azure consumed services reduce the MACC when they are billed against the enrolled agreement. The account team should confirm eligibility for each workload and offer before commitments are counted.</p>
+        <div class="macc">
+          <div class="yes">
+            <h4>Usually counts when eligible</h4>
+            <ul>
+              <li>Core Azure consumption: compute, storage, networking, databases, security, monitoring, backup, and related Azure platform services.</li>
+              <li>Azure AI, Azure OpenAI, Fabric capacity, and data services when purchased and billed as eligible Azure consumption.</li>
+              <li>Some Azure Marketplace purchases if the offer is MACC-eligible and transacted through the right billing path.</li>
+              <li>Reserved instances, savings plans, and committed Azure capacity when applied to eligible Azure services.</li>
+            </ul>
+          </div>
+          <div class="no">
+            <h4>Often does not count unless explicitly eligible</h4>
+            <ul>
+              <li>Microsoft 365, Dynamics 365, standalone GitHub, support, consulting, hardware, training, and most professional services.</li>
+              <li>Third-party SaaS or Marketplace offers that are not marked MACC-eligible.</li>
+              <li>Services billed outside the enrolled Azure agreement or outside the CSI-approved commitment structure.</li>
+              <li>Licensing benefits that reduce cost but are not Azure consumption themselves.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <div class="callout" style="margin-top:16px">
+        <strong>Recommended BU path:</strong> start with a 30-60 minute opportunity triage, classify the workload as migrate, modernize, AI, data, or productivity, confirm MACC eligibility with the Microsoft account team, then attach the right funding and specialist motion before a BU commits delivery resources.
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="shell footgrid">
+    <span>Microsoft Confidential - for discussion. Source: CSI-Microsoft partnership working materials, June 2026.</span>
+    <span>Built as a sandbox-safe SharePoint/OneDrive HTML microsite.</span>
+  </div>
+</footer>
+</body>
+</html>
