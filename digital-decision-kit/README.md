@@ -21,16 +21,17 @@ The output is a standardized **one-page brief** you can email back.
 | `research-starter.md` | Optional prompt/checklist to research the customer first. |
 | `finalize-onepager.md` | Paste-in prompt to produce the final brief on demand. |
 | `example-ibema.md` | A complete worked example (Ibema → predictive maintenance). |
-| `rollout/` | Email invite, quick-start, and feedback ask for distributing to BUs. |
+| `feedback-3q.md` | 3 feedback questions to send back with the brief. |
+| `rollout/` | The invite email for distributing to BUs. |
 
 ## Quick start
 
 1. Open `synthie-system-prompt.md`, copy below the divider, paste into Microsoft Copilot.
 2. Answer its questions about a customer you know.
 3. Say "finalize" to get the one-page brief.
-4. Email it back (with the 3 feedback notes from `rollout/feedback-3q.md`).
+4. Email it back (with the 3 feedback notes from `feedback-3q.md`).
 
-See `rollout/quick-start.md` for the full one-page guide.
+See `quick-start.md` for the full one-page guide.
 
 ---
 

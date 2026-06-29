@@ -13,5 +13,5 @@ Keep it to roughly one page and self-contained so I can copy it straight into an
 After the brief, ask if I want to adjust any scores or swap the pick.
 ```
 
-That's it — copy the brief Synthie returns and email it back (see `rollout/feedback-3q.md` for the
+That's it — copy the brief Synthie returns and email it back (see `feedback-3q.md` for the
 short feedback to include).
