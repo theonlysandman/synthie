@@ -3,7 +3,7 @@
 > **How to use this:** Copy everything below the line into a new chat in Microsoft Copilot
 > (or ChatGPT / any capable assistant). Then answer its questions one at a time. At the
 > end it produces a single, standardized **one-page brief** you can email back. See
-> `HOW-TO-USE.md` for the full walkthrough.
+> `rollout/quick-start.md` for the full walkthrough.
 >
 > **Strongly recommended: speak, don't type.** Use the microphone / dictation button in your
 > chat app (or your device's voice-to-text) to *talk* your answers. People say far more out loud

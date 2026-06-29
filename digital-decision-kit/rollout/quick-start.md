@@ -2,6 +2,11 @@
 
 Find the first AI use case worth building for one of your customers — in ~20 minutes. No setup.
 
+## What you'll end up with
+A single **one-page brief** naming: who the customer is and where their money moves, the **one** AI
+use case to build first, a 0–5 scorecard (technical fit, implementability, value, deployability),
+how to build it on **Microsoft Azure**, and the first next step. You email that brief back.
+
 ## Before you start
 Pick **one customer you know well**. That's all you need.
 
@@ -36,4 +41,5 @@ Pick **one customer you know well**. That's all you need.
 - Jumped to ideas too fast → "back to profile" and add more about the customer.
 - Ideas feel generic → tell it more about *where the money moves* and *what data they have*.
 
-See `example-ibema.md` for a complete finished brief.
+See `example-ibema.md` for a complete finished brief (Brazilian cartonboard maker → predictive
+maintenance to cut paper-machine breaks) — skim it to see exactly where you're headed.

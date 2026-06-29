@@ -4,42 +4,57 @@ This is written for a **personal, staggered send** — not a mass blast. Send to
 anything that trips them up, then send the rest. Replace the `<...>` placeholders. It offers **both**
 a group session and individual time (your call to make up for the missed meeting).
 
-**Attach:** `synthie-system-prompt.md`, `HOW-TO-USE.md`, and `example-ibema.md` (or link the
+**Attach:** `synthie-system-prompt.md`, `quick-start.md`, and `example-ibema.md` (or link the
 `digital-decision-kit/` folder).
 
 ---
 
 **Subject:** A 20-minute way to find your first AI use case (and I owe you some time)
 
-Hi <Name>,
+Hi all,
 
-First — apologies I had to miss our session for family reasons. I'd like to make it up to you, so
-I'm offering both a **group walkthrough** and **individual time** this round (details at the bottom).
+First, apologies again that I had to miss our session for family reasons.
 
-Here's the quick version. I've put together a simple, self-serve kit that helps you find the **first
-AI use case worth building for one of your customers** — and turns it into a one-page brief. It runs
-entirely in Microsoft Copilot (or any chat assistant), takes about **20 minutes**, and needs no
-setup.
+As a way to make that up to the group, and more importantly to keep everyone moving, I created an
+asynchronous process you can try on your own schedule. It is meant to help you identify the first AI
+use case worth building for one of your customers and turn it into a simple one-page brief.
 
-**What I'd love from you:**
+This is v0.5 of the approach, so we can absolutely still meet to discuss it, brainstorm customer
+opportunities, and work through any issues. But for anyone who wants to go faster, I wanted to
+unblock you instead of letting the missed session slow things down.
+
+The kit runs entirely in Microsoft Copilot, or any good chat assistant, takes about 20 minutes, and
+does not require any setup.
+
+**What I would love from you:**
 1. Pick **one customer you know well**.
-2. Open `HOW-TO-USE.md` and follow the 5 steps (paste the prompt, answer its questions, say
-   "finalize"). **Tip: use the mic / dictation and *talk* your answers instead of typing — you'll
-   say more and the brief comes out noticeably better.**
-3. **Email me the one-page brief it produces** — plus the 3 quick feedback notes at the end — by
-   **<soft deadline, ~1 week>**.
+2. Open Microsoft Copilot and paste in the Synthie prompt (`synthie-system-prompt.md`).
+3. Answer its questions, one at a time.
+4. Type **finalize** to get your one-page brief.
+5. Email me the brief, plus the three feedback questions at the end, by **<soft deadline, ~1 week>**.
 
-That's it. You'll end up with a concrete, Azure-ready AI idea for your customer, and I'll get the
-feedback I need to make this great for everyone. There's a finished example attached
-(`example-ibema.md`) so you can see exactly where it lands.
+One tip: use the microphone or dictation feature and talk through your answers instead of typing.
+People usually provide more context that way, and the final brief tends to come out stronger. The
+`quick-start.md` lays out these same steps on one page if you want it.
 
-**Want a hand? Pick whichever suits you (or both):**
-- **Group walkthrough:** <date/time + link> — I'll run it live and answer questions.
-- **1:1 time:** grab a slot here <booking link> or just reply with a couple of times.
+That is it. You will walk away with a concrete, Azure-ready AI idea for your customer, and I will get
+the feedback needed to improve this before rolling it out more broadly. I have also included
+`example-ibema.md` so you can see exactly what a finished output looks like.
 
-Thanks for being one of the first to try this — your input genuinely shapes it.
+**If you would like some help, there are three options:**
+- reach out anytime with questions or feedback
+- **group walkthrough:** I will walk through it live and answer questions
+- **1:1 time:** just reply with a few times that work for you
 
-<Your name>
+If you have a question, others probably do as well, so do not hesitate to send it my way.
+
+Thanks for being one of the first people to try this. Your feedback will genuinely help shape where
+this goes next.
+
+Sorry again.
+
+Thanks and talk soon,
+Sandy
 
 ---
 
